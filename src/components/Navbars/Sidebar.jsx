@@ -1,129 +1,120 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
 import {
   Home,
   User,
   Package,
   Calendar,
-  BarChart2,
   Bell,
-  MessageCircle,
+  GitPullRequestCreateIcon,
   LogOut,
-
-  GitPullRequestCreateIcon
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import Tooltip from "@mui/material/Tooltip"; // optional for hover tips
 
 const menuItems = [
   { name: "Dashboard", icon: Home, path: "/dashboard" },
   { name: "Edit Shop Data", icon: User, path: "/editshop" },
-  { name: "Tyre Inventory Management", icon: Package, path: "/inventory" },
-  { name: "Order sheduled & Management", icon: Calendar, path: "/orders" },
+  { name: "Tyre Inventory", icon: Package, path: "/inventory" },
+  { name: "Orders & Schedule", icon: Calendar, path: "/orders" },
   { name: "Notifications", icon: Bell, path: "/notifications" },
   {
-    name: "Tyres Requested",
+    name: "Tyre Requests",
     icon: GitPullRequestCreateIcon,
     path: "/tyrerequested",
   },
 ];
 
-const SideBar = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const sidebarRef = useRef(null);
+const Sidebar = ({ collapsed, setCollapsed }) => {
+  const location = useLocation();
   const navigate = useNavigate();
 
-  const toggleSidebar = () => setIsOpen(!isOpen);
-  const closeSidebar = () => setIsOpen(false);
-
-  useEffect(() => {
-    const handleOutsideClick = (event) => {
-      if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
-        closeSidebar();
-      }
-    };
-
-    document.addEventListener("mousedown", handleOutsideClick);
-    return () => document.removeEventListener("mousedown", handleOutsideClick);
-  }, []);
+  const toggleSidebar = () => setCollapsed(!collapsed);
 
   return (
-    <>
-      <button
-        onClick={toggleSidebar}
-        className="fixed top-4 left-4 z-50 p-2 sm:hidden text-gray-500"
-      >
-        <svg className="h-6" fill="currentColor" viewBox="0 0 20 20">
-          <path
-            clipRule="evenodd"
-            fillRule="evenodd"
-            d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10z"
+    <div
+      className={`h-screen bg-white shadow-xl -r transition-all duration-300 ease-in-out ${
+        collapsed ? "w-20" : "w-64"
+      } fixed top-0 left-0 z-50`}
+    >
+      {/* Logo & Toggle */}
+      <div className="flex items-center justify-between px-4 py-5 ">
+        <div className="flex items-center gap-2">
+          <img
+            src="https://logos-download.com/wp-content/uploads/2019/06/Royal_Enfield_Logo_full-3000x3000.png"
+            className="h-8 w-8"
+            alt="RevoZen"
           />
-        </svg>
-      </button>
-
-      <aside
-        ref={sidebarRef}
-        className={`fixed top-0 left-0 z-40 w-64 h-screen transition-transform bg-white shadow-lg border-r transform ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
-        } sm:translate-x-0`}
-      >
-        <div className="flex flex-col h-full px-4 py-6">
-          {/* Logo */}
-          <div className="flex items-center mb-10">
-            <img
-              src="https://cdn5.vectorstock.com/i/1000x1000/64/39/tire-repair-shop-logo-design-vector-37146439.jpg"
-              alt="RevoZen Logo"
-              className="h-10 w-10"
-            />
-            <span className="text-xl font-bold text-orange-600 ml-2">
-              RevoZen
-            </span>
-          </div>
-
-          {/* Menu Items */}
-          <ul className="flex-1 space-y-2">
-            {menuItems.map(({ name, icon: Icon, path }, idx) => (
-              <li key={idx}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    navigate(path);
-                    closeSidebar();
-                  }}
-                  className={`w-full text-left flex items-center gap-3 p-3 rounded-lg text-sm font-medium ${
-                    window.location.pathname === path
-                      ? "bg-blue-600 text-white"
-                      : "text-gray-600 hover:bg-gray-100"
-                  }`}
-                >
-                  <Icon
-                    size={20}
-                    className={`${
-                      window.location.pathname === path
-                        ? "text-white"
-                        : "text-gray-500"
-                    }`}
-                  />
-                  {name}
-                </button>
-              </li>
-            ))}
-          </ul>
-
-          {/* Logout */}
-          <div className="mt-auto">
-            <button
-              type="button"
-              onClick={() => navigate("/")}
-              className="flex items-center gap-3 text-red-600 hover:bg-red-50 p-3 rounded-lg font-medium text-sm w-full text-left"
-            >
-              <LogOut size={20} />
-              Logout
-            </button>
-          </div>
+          {!collapsed && (
+            <span className="text-xl font-bold text-orange-600">RevoZen</span>
+          )}
         </div>
-      </aside>
-    </>
+        <button onClick={toggleSidebar} className="text-gray-500">
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            {collapsed ? (
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            ) : (
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            )}
+          </svg>
+        </button>
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex flex-col justify-between h-full">
+        <ul className="space-y-1 mt-4">
+          {menuItems.map(({ name, icon: Icon, path }) => {
+            const isActive = location.pathname === path;
+            return (
+              <li key={name}>
+                <Tooltip title={collapsed ? name : ""} placement="right">
+                  <button
+                    onClick={() => navigate(path)}
+                    className={`flex items-center gap-4 w-full p-3 text-sm font-medium transition rounded-lg ${
+                      isActive
+                        ? "bg-blue-600 text-white"
+                        : "text-gray-600 hover:bg-gray-100"
+                    }`}
+                  >
+                    <Icon
+                      size={20}
+                      className={isActive ? "text-white" : "text-gray-500"}
+                    />
+                    {!collapsed && <span>{name}</span>}
+                  </button>
+                </Tooltip>
+              </li>
+            );
+          })}
+        </ul>
+
+        {/* Logout */}
+        <div className="p-3">
+          <button
+            onClick={() => navigate("/")}
+            className="flex items-center gap-4 w-full p-3 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg"
+          >
+            <LogOut size={20} />
+            {!collapsed && <span>Logout</span>}
+          </button>
+        </div>
+      </nav>
+    </div>
   );
 };
 
-export default SideBar;
+export default Sidebar;
