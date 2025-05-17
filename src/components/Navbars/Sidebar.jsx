@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React from "react";
+import { useSelector, useDispatch } from "react-redux";
 import {
   Home,
   User,
@@ -10,25 +11,23 @@ import {
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Tooltip from "@mui/material/Tooltip"; // optional for hover tips
+import { toggleSidebar } from "../../store/sidebarSlice";
 
 const menuItems = [
   { name: "Dashboard", icon: Home, path: "/dashboard" },
+  { name: "Client Orders", icon: Package, path: "/clientdata" },
   { name: "Edit Shop Data", icon: User, path: "/editshop" },
-  { name: "Tyre Inventory", icon: Package, path: "/inventory" },
-  { name: "Orders & Schedule", icon: Calendar, path: "/orders" },
   { name: "Notifications", icon: Bell, path: "/notifications" },
-  {
-    name: "Tyre Requests",
-    icon: GitPullRequestCreateIcon,
-    path: "/tyrerequested",
-  },
+  { name: "Privacy Policy", icon: Calendar, path: "/privacy-policy" }, // You can use a better icon if you want
 ];
 
-const Sidebar = ({ collapsed, setCollapsed }) => {
+const Sidebar = () => {
+  const collapsed = useSelector((state) => state.sidebar.collapsed);
+  const dispatch = useDispatch();
   const location = useLocation();
   const navigate = useNavigate();
 
-  const toggleSidebar = () => setCollapsed(!collapsed);
+  const handleToggle = () => dispatch(toggleSidebar());
 
   return (
     <div
@@ -48,7 +47,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
             <span className="text-xl font-bold text-orange-600">RevoZen</span>
           )}
         </div>
-        <button onClick={toggleSidebar} className="text-gray-500">
+        <button onClick={handleToggle} className="text-gray-500">
           <svg
             className="w-6 h-6"
             fill="none"
