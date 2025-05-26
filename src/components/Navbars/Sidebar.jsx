@@ -38,11 +38,7 @@ const Sidebar = () => {
       {/* Logo & Toggle */}
       <div className="flex items-center justify-between px-4 py-5 ">
         <div className="flex items-center gap-2">
-          <img
-            src="https://logos-download.com/wp-content/uploads/2019/06/Royal_Enfield_Logo_full-3000x3000.png"
-            className="h-8 w-8"
-            alt="RevoZen"
-          />
+          <GitPullRequestCreateIcon size={20} />
           {!collapsed && (
             <span className="text-xl font-bold text-orange-600">RevoZen</span>
           )}
