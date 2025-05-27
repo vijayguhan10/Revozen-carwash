@@ -1,105 +1,76 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-} from "recharts";
-import { FaPlus, FaEllipsisV, FaFileExport } from "react-icons/fa";
-
-const stats = [
-  {
-    label: "Total Orders",
-    value: 21,
-    change: "+25.2%",
-    chart: [
-      { x: 1, y: 2 },
-      { x: 2, y: 4 },
-      { x: 3, y: 6 },
-      { x: 4, y: 8 },
-      { x: 5, y: 7 },
-      { x: 6, y: 9 },
-    ],
-    color: "#6366f1",
-    gradient: "ordersGradient",
-  },
-  {
-    label: "Order items over time",
-    value: 15,
-    change: "-18.2%",
-    chart: [
-      { x: 1, y: 8 },
-      { x: 2, y: 7 },
-      { x: 3, y: 6 },
-      { x: 4, y: 5 },
-      { x: 5, y: 6 },
-      { x: 6, y: 5 },
-    ],
-    color: "#f59e42",
-    gradient: "itemsGradient",
-  },
-  {
-    label: "Returns Orders",
-    value: 0,
-    change: "-1.2%",
-    chart: [
-      { x: 1, y: 1 },
-      { x: 2, y: 1 },
-      { x: 3, y: 0 },
-      { x: 4, y: 0 },
-      { x: 5, y: 0 },
-      { x: 6, y: 0 },
-    ],
-    color: "#ef4444",
-    gradient: "returnsGradient",
-  },
-  {
-    label: "Fulfilled orders over time",
-    value: 12,
-    change: "-12.2%",
-    chart: [
-      { x: 1, y: 2 },
-      { x: 2, y: 3 },
-      { x: 3, y: 4 },
-      { x: 4, y: 6 },
-      { x: 5, y: 8 },
-      { x: 6, y: 12 },
-    ],
-    color: "#22c55e",
-    gradient: "fulfilledGradient",
-  },
-];
+import { FaCheck, FaTimes } from "react-icons/fa";
 
 const ClientData = ({ sidebarCollapsed }) => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState("All");
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      const token = localStorage.getItem("token");
-      try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/carwash/getall`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setOrders(response.data.orders ?? []);
-        setLoading(false);
-      } catch (err) {
-        setError(err.message);
-        setLoading(false);
-      }
-    };
-
     fetchOrders();
   }, []);
+
+  const fetchOrders = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/carwash/getall`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setOrders(response.data.orders ?? []);
+      setLoading(false);
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+    }
+  };
+
+  const handleApprove = async (orderId) => {
+    const token = localStorage.getItem("token");
+    try {
+      await axios.put(
+        `${import.meta.env.VITE_API_URL}/carwash/update/${orderId}`,
+        { status: "completed" },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      fetchOrders(); // Refresh orders after update
+    } catch (err) {
+      console.error("Error approving order:", err);
+    }
+  };
+
+  const handleReject = async (orderId) => {
+    const token = localStorage.getItem("token");
+    try {
+      await axios.put(
+        `${import.meta.env.VITE_API_URL}/carwash/update/${orderId}`,
+        { status: "rejected" },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      fetchOrders(); // Refresh orders after update
+    } catch (err) {
+      console.error("Error rejecting order:", err);
+    }
+  };
+
+  const filteredOrders = orders.filter((order) => {
+    if (activeTab === "All") return true;
+    return order.status === activeTab.toLowerCase();
+  });
 
   if (loading) return <div className="p-8">Loading orders...</div>;
   if (error) return <div className="p-8 text-red-500">Error: {error}</div>;
@@ -114,43 +85,24 @@ const ClientData = ({ sidebarCollapsed }) => {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Orders</h2>
-          <span className="text-xs text-gray-500">Jan 1 - Jan 30, 2024</span>
         </div>
-        <div className="flex gap-2">
-          <button className="flex items-center gap-2 border px-4 py-2 rounded text-gray-700 bg-white hover:bg-gray-50 text-sm">
-            <FaFileExport className="text-base" />
-            Export
-          </button>
-          <button className="flex items-center gap-2 border px-4 py-2 rounded text-gray-700 bg-white hover:bg-gray-50 text-sm">
-            <FaEllipsisV className="text-base" />
-            More actions
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2 rounded text-white bg-purple-600 hover:bg-purple-700 text-sm font-semibold">
-            <FaPlus className="text-base" />
-            Create order
-          </button>
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="flex gap-4 mb-8">
-        {stats.map((stat) => (
-          <StatCard key={stat.label} {...stat} />
-        ))}
       </div>
 
       {/* Tabs */}
       <div className="flex gap-4 mb-4 border-b">
-        {["All", "Unfulfilled", "Unpaid", "Open", "Closed", "Add"].map(
-          (tab) => (
-            <button
-              key={tab}
-              className="px-3 py-2 text-sm font-medium text-gray-700 border-b-2 border-transparent hover:border-purple-500 hover:text-purple-600 transition"
-            >
-              {tab}
-            </button>
-          )
-        )}
+        {["All", "Pending", "Completed", "Rejected"].map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-3 py-2 text-sm font-medium border-b-2 transition ${
+              activeTab === tab
+                ? "border-purple-500 text-purple-600"
+                : "border-transparent text-gray-700 hover:border-purple-500 hover:text-purple-600"
+            }`}
+          >
+            {tab}
+          </button>
+        ))}
       </div>
 
       {/* Table */}
@@ -164,82 +116,67 @@ const ClientData = ({ sidebarCollapsed }) => {
               <th className="py-3 px-4">Customer Name</th>
               <th className="py-3 px-4">Customer Email</th>
               <th className="py-3 px-4">Status</th>
+              <th className="py-3 px-4">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {orders.map((order) => (
-              <tr key={order._id} className="border-b hover:bg-gray-50">
-                <td className="py-2 px-4">{order._id}</td>
-                <td className="py-2 px-4">
-                  {new Date(order.appointmentDate).toLocaleDateString()}
+            {filteredOrders.length === 0 ? (
+              <tr>
+                <td colSpan="7" className="py-4 text-center text-gray-500">
+                  No orders found in this category
                 </td>
-                <td className="py-2 px-4">{order.appointmentTime}</td>
-                <td className="py-2 px-4">{order.orderId?.name}</td>
-                <td className="py-2 px-4">{order.orderId?.email}</td>
-                <td className="py-2 px-4 capitalize">{order.status}</td>
               </tr>
-            ))}
+            ) : (
+              filteredOrders.map((order) => (
+                <tr key={order._id} className="border-b hover:bg-gray-50">
+                  <td className="py-2 px-4">{order._id}</td>
+                  <td className="py-2 px-4">
+                    {new Date(order.appointmentDate).toLocaleDateString()}
+                  </td>
+                  <td className="py-2 px-4">{order.appointmentTime}</td>
+                  <td className="py-2 px-4">{order.orderId?.name}</td>
+                  <td className="py-2 px-4">{order.orderId?.email}</td>
+                  <td className="py-2 px-4">
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                        order.status === "completed"
+                          ? "bg-green-100 text-green-700"
+                          : order.status === "pending"
+                          ? "bg-yellow-100 text-yellow-700"
+                          : "bg-red-100 text-red-700"
+                      }`}
+                    >
+                      {order.status}
+                    </span>
+                  </td>
+                  <td className="py-2 px-4">
+                    {activeTab === "All" && order.status === "pending" && (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleApprove(order._id)}
+                          className="bg-green-100 hover:bg-green-200 text-green-700 p-1.5 rounded"
+                          title="Approve"
+                        >
+                          <FaCheck />
+                        </button>
+                        <button
+                          onClick={() => handleReject(order._id)}
+                          className="bg-red-100 hover:bg-red-200 text-red-700 p-1.5 rounded"
+                          title="Reject"
+                        >
+                          <FaTimes />
+                        </button>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
     </div>
   );
 };
-
-const StatCard = ({ label, value, change, chart, color, gradient }) => (
-  <div className="bg-white rounded-xl shadow p-4 flex-1 min-w-[200px]">
-    <div className="flex justify-between items-center">
-      <div>
-        <div className="text-xs text-gray-500">{label}</div>
-        <div className="text-2xl font-bold">{value}</div>
-        <div className="text-xs text-gray-400">{change} last week</div>
-      </div>
-      <div className="w-24 h-12">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chart}>
-            <defs>
-              <linearGradient id="ordersGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#6366f1" stopOpacity={0.8} />
-                <stop offset="100%" stopColor="#6366f1" stopOpacity={0.1} />
-              </linearGradient>
-              <linearGradient id="itemsGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#f59e42" stopOpacity={0.8} />
-                <stop offset="100%" stopColor="#f59e42" stopOpacity={0.1} />
-              </linearGradient>
-              <linearGradient id="returnsGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#ef4444" stopOpacity={0.8} />
-                <stop offset="100%" stopColor="#ef4444" stopOpacity={0.1} />
-              </linearGradient>
-              <linearGradient
-                id="fulfilledGradient"
-                x1="0"
-                y1="0"
-                x2="0"
-                y2="1"
-              >
-                <stop offset="0%" stopColor="#22c55e" stopOpacity={0.8} />
-                <stop offset="100%" stopColor="#22c55e" stopOpacity={0.1} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid
-              strokeDasharray="3 3"
-              vertical={false}
-              horizontal={false}
-            />
-            <XAxis dataKey="x" hide />
-            <Tooltip />
-            <Line
-              type="monotone"
-              dataKey="y"
-              stroke={`url(#${gradient})`}
-              strokeWidth={3}
-              dot={false}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
-  </div>
-);
 
 export default ClientData;
