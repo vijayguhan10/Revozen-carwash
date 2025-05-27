@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { FaCheck, FaTimes } from "react-icons/fa";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const ClientData = ({ sidebarCollapsed }) => {
   const [orders, setOrders] = useState([]);
@@ -25,18 +27,20 @@ const ClientData = ({ sidebarCollapsed }) => {
       );
       setOrders(response.data.orders ?? []);
       setLoading(false);
+      toast.success("Orders fetched successfully!");
     } catch (err) {
       setError(err.message);
       setLoading(false);
+      toast.error("Failed to fetch orders.");
     }
   };
 
-  const handleApprove = async (orderId) => {
+  const handleStatusChange = async (orderId, status) => {
     const token = localStorage.getItem("token");
     try {
-      await axios.put(
-        `${import.meta.env.VITE_API_URL}/carwash/update/${orderId}`,
-        { status: "completed" },
+      await axios.patch(
+        `${import.meta.env.VITE_API_URL}/carwash/order/status`,
+        { orderId, status },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -44,26 +48,10 @@ const ClientData = ({ sidebarCollapsed }) => {
         }
       );
       fetchOrders(); // Refresh orders after update
+      toast.success(`Order status updated to ${status}!`);
     } catch (err) {
-      console.error("Error approving order:", err);
-    }
-  };
-
-  const handleReject = async (orderId) => {
-    const token = localStorage.getItem("token");
-    try {
-      await axios.put(
-        `${import.meta.env.VITE_API_URL}/carwash/update/${orderId}`,
-        { status: "rejected" },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      fetchOrders(); // Refresh orders after update
-    } catch (err) {
-      console.error("Error rejecting order:", err);
+      console.error(`Error updating order status to ${status}:`, err);
+      toast.error(`Failed to update order status to ${status}.`);
     }
   };
 
@@ -81,6 +69,7 @@ const ClientData = ({ sidebarCollapsed }) => {
         sidebarCollapsed ? "ml-20" : "ml-64"
       }`}
     >
+      <ToastContainer />
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
@@ -153,14 +142,18 @@ const ClientData = ({ sidebarCollapsed }) => {
                     {activeTab === "All" && order.status === "pending" && (
                       <div className="flex gap-2">
                         <button
-                          onClick={() => handleApprove(order._id)}
+                          onClick={() =>
+                            handleStatusChange(order._id, "completed")
+                          }
                           className="bg-green-100 hover:bg-green-200 text-green-700 p-1.5 rounded"
                           title="Approve"
                         >
                           <FaCheck />
                         </button>
                         <button
-                          onClick={() => handleReject(order._id)}
+                          onClick={() =>
+                            handleStatusChange(order._id, "rejected")
+                          }
                           className="bg-red-100 hover:bg-red-200 text-red-700 p-1.5 rounded"
                           title="Reject"
                         >

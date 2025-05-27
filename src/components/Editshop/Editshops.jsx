@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { ArrowLeft } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -39,11 +38,12 @@ export default function EditShop({ sidebarCollapsed }) {
         : [...prev.daysOfOperation, day],
     }));
   };
+
   const GetShopData = async () => {
     const authToken = localStorage.getItem("token");
     try {
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/shops/getmetadata`,
+        `${import.meta.env.VITE_API_URL}/carwash/getindividual`,
         {
           headers: {
             Authorization: `Bearer ${authToken}`,
@@ -51,30 +51,30 @@ export default function EditShop({ sidebarCollapsed }) {
           withCredentials: true,
         }
       );
-      console.log("Response", response);
       if (response.status === 200) {
         const data = response.data;
         setFormData({
           _id: data._id,
           email: data.email,
           name: data.name,
-          password: data.password,
-          adminNotes: data.adminNotes,
-          phoneNumber: data.phoneNumber,
-          businessAddress: data.businessAddress,
-
-          pincode: data.pincode,
-          region: data.region,
-          noOfStaff: data.noOfStaff,
+          password: data.password || "",
+          adminNotes: data.adminNotes || "",
+          phoneNumber: data.phoneNumber || "",
+          businessAddress: data.businessAddress || "",
+          pincode: data.pincode || "",
+          region: data.region || "",
+          noOfStaff: data.noOfStaff || "",
           openingTime: new Date(data.openingTime),
           closingTime: new Date(data.closingTime),
-          daysOfOperation: data.daysOfOperation,
+          daysOfOperation: data.daysOfOperation || [],
         });
       }
     } catch (error) {
       console.error("Error fetching shop data:", error);
+      toast.error("Failed to fetch shop data.");
     }
   };
+
   useEffect(() => {
     GetShopData();
   }, []);
@@ -83,11 +83,10 @@ export default function EditShop({ sidebarCollapsed }) {
     e.preventDefault();
     const authToken = localStorage.getItem("token");
     try {
-      const response = await axios.put(
-        `${import.meta.env.VITE_API_URL}/shops/updateshop`,
+      const response = await axios.patch(
+        `${import.meta.env.VITE_API_URL}/carwash/updateshop`,
         {
           ...formData,
-          _id: formData._id,
           openingTime: formData.openingTime.toISOString(),
           closingTime: formData.closingTime.toISOString(),
         },
@@ -98,7 +97,6 @@ export default function EditShop({ sidebarCollapsed }) {
           withCredentials: true,
         }
       );
-      console.log("response", response);
       if (response.status === 200) {
         toast.success("Shop details updated successfully!");
       } else {
