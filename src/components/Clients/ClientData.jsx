@@ -25,6 +25,7 @@ const ClientData = ({ sidebarCollapsed }) => {
           },
         }
       );
+      console.log("Fetched orders:", response.data);
       setOrders(response.data.orders ?? []);
       setLoading(false);
       toast.success("Orders fetched successfully!");
